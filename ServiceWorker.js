@@ -1,9 +1,9 @@
 const cacheName = "DefaultCompany-JankenMaster-1.0";
 const contentToCache = [
-    "Build/Build.loader.js",
-    "Build/Build.framework.js",
-    "Build/Build.data",
-    "Build/Build.wasm",
+    "Build/jankenMaster.loader.js",
+    "Build/jankenMaster.framework.js",
+    "Build/jankenMaster.data",
+    "Build/jankenMaster.wasm",
     "TemplateData/style.css"
 
 ];
