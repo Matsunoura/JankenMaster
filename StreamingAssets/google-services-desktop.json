@@ -1,0 +1,31 @@
+{
+  "project_info": {
+    "project_number": "539658863775",
+    "project_id": "jankenranking",
+    "storage_bucket": "jankenranking.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:539658863775:ios:5ecc875c82cabd2fc3ceaa",
+        "android_client_info": {
+          "package_name": "com.Matsunoura.JankenMaster"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSyCH_2XfKK5C35KTU4t47_r65RgEc0oHRBU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 0
+        },
+        "appinvite_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
