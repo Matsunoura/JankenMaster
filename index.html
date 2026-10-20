@@ -56,7 +56,7 @@
         updateBannerVisibility();
       }
 
-      var buildUrl = "Build";
+      var buildUrl = "Build_20261020130651862";
       var loaderUrl = buildUrl + "/jankenMaster.loader.js";
       var config = {
         arguments: [],
@@ -107,5 +107,94 @@
       };
       document.body.appendChild(script);
     </script>
-  </body>
+  
+<!-- UPDATE_WIDGET_START -->
+<div id="updateNotice" style="
+    display:none;
+    position:fixed;
+    top:12px;
+    right:12px;
+    z-index:99999;
+    background:rgba(0,0,0,0.88);
+    padding:12px;
+    border-radius:8px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+">
+    <button id="updateButton" style="
+        background:#2478e5;
+        color:white;
+        border:none;
+        padding:12px 16px;
+        font-size:15px;
+        font-weight:bold;
+        border-radius:5px;
+        cursor:pointer;
+    ">最新版を読み込む</button>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    const CURRENT_VERSION = '20261020130651862';
+    let latestVersion = null;
+    let checking = false;
+
+    const notice = document.getElementById('updateNotice');
+    const button = document.getElementById('updateButton');
+
+    async function checkForUpdate() {
+        if (checking || document.hidden) return;
+        checking = true;
+
+        try {
+            const response = await fetch(
+                './version.json?check=' + Date.now(),
+                { cache: 'no-store' }
+            );
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            if (!data.version) return;
+
+            latestVersion = String(data.version);
+
+            if (latestVersion !== CURRENT_VERSION) {
+                notice.style.display = 'block';
+            } else {
+                notice.style.display = 'none';
+            }
+        } catch (error) {
+            console.warn('バージョン確認に失敗しました', error);
+        } finally {
+            checking = false;
+        }
+    }
+
+    button.addEventListener('click', function () {
+        if (!latestVersion) return;
+
+        // 最新版の番号を付けて、HTMLを再読み込み
+        const url = new URL(window.location.href);
+        url.searchParams.set('v', latestVersion);
+
+        window.location.replace(url.href);
+    });
+
+    checkForUpdate();
+
+    // タブに戻ったときに再確認
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) checkForUpdate();
+    });
+
+    // 起動中も定期的に更新を確認
+    window.setInterval(checkForUpdate, 60000);
+})();
+</script>
+<!-- UPDATE_WIDGET_END -->
+
+</body>
 </html>
