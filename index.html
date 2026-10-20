@@ -1,200 +1,240 @@
+
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | JankenMaster</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-    <link rel="manifest" href="manifest.webmanifest">
-  </head>
-  <body>
-    <div id="unity-container">
-      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-    </div>
-    <script>
-      window.addEventListener("load", function () {
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.register("ServiceWorker.js");
-        }
-      });
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unity Web Player | JankenMaster</title>
 
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var warningBanner = document.querySelector("#unity-warning");
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css">
+  <link rel="manifest" href="manifest.webmanifest">
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
-
-      var buildUrl = "Build_20261020130651862";
-      var loaderUrl = buildUrl + "/jankenMaster.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/jankenMaster.data",
-        frameworkUrl: buildUrl + "/jankenMaster.framework.js",
-        codeUrl: buildUrl + "/jankenMaster.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "JankenMaster",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
-      };
-
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-      }
-
-
-      loadingBar.style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
-    </script>
-  
-<!-- UPDATE_WIDGET_START -->
-<div id="updateNotice" style="
-    display:none;
-    position:fixed;
-    top:12px;
-    right:12px;
-    z-index:99999;
-    background:rgba(0,0,0,0.88);
-    padding:12px;
-    border-radius:8px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.3);
-">
-    <button id="updateButton" style="
-        background:#2478e5;
-        color:white;
-        border:none;
-        padding:12px 16px;
-        font-size:15px;
-        font-weight:bold;
-        border-radius:5px;
-        cursor:pointer;
-    ">最新版を読み込む</button>
-</div>
-
-<script>
-(function () {
-    'use strict';
-
-    const CURRENT_VERSION = '20261020130651862';
-    let latestVersion = null;
-    let checking = false;
-
-    const notice = document.getElementById('updateNotice');
-    const button = document.getElementById('updateButton');
-
-    async function checkForUpdate() {
-        if (checking || document.hidden) return;
-        checking = true;
-
-        try {
-            const response = await fetch(
-                './version.json?check=' + Date.now(),
-                { cache: 'no-store' }
-            );
-
-            if (!response.ok) return;
-
-            const data = await response.json();
-
-            if (!data.version) return;
-
-            latestVersion = String(data.version);
-
-            if (latestVersion !== CURRENT_VERSION) {
-                notice.style.display = 'block';
-            } else {
-                notice.style.display = 'none';
-            }
-        } catch (error) {
-            console.warn('バージョン確認に失敗しました', error);
-        } finally {
-            checking = false;
-        }
+  <style>
+    #updateNotice {
+      display: none;
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 99999;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
-    button.addEventListener('click', function () {
-        if (!latestVersion) return;
+    #updateButton {
+      background: #2478e5;
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-        // 最新版の番号を付けて、HTMLを再読み込み
-        const url = new URL(window.location.href);
-        url.searchParams.set('v', latestVersion);
+    #updateButton:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+  </style>
+</head>
 
-        window.location.replace(url.href);
+<body>
+  <div id="unity-container">
+    <canvas id="unity-canvas" width="960" height="600" tabindex="-1"></canvas>
+
+    <div id="unity-loading-bar">
+      <div id="unity-logo"></div>
+      <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-full"></div>
+      </div>
+    </div>
+
+    <div id="unity-warning"></div>
+  </div>
+
+  <div id="updateNotice">
+    <button id="updateButton" type="button">最新版を読み込む</button>
+  </div>
+
+  <script>
+    /*
+     * Service Workerの新規登録は行わない。
+     * 以前登録されたものがあれば解除を試みる。
+     */
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations()
+        .then(function (registrations) {
+          return Promise.all(
+            registrations.map(function (registration) {
+              return registration.unregister();
+            })
+          );
+        })
+        .catch(function (error) {
+          console.warn("Service Workerの解除に失敗しました:", error);
+        });
+    }
+
+    /*
+     * バージョン確認・更新通知
+     * この値はBuildScript.csでビルドごとに更新する。
+     */
+    const CURRENT_VERSION = "20261020130651862";
+
+    const notice = document.getElementById("updateNotice");
+    const updateButton = document.getElementById("updateButton");
+
+    let latestVersion = null;
+    let checkingVersion = false;
+
+    async function checkForUpdate() {
+      if (checkingVersion || document.hidden) return;
+
+      checkingVersion = true;
+
+      try {
+        const response = await fetch(
+          "./version.json?check=" + Date.now(),
+          { cache: "no-store" }
+        );
+
+        if (!response.ok) {
+          throw new Error("version.json取得失敗: " + response.status);
+        }
+
+        const data = await response.json();
+
+        if (!data.version) return;
+
+        latestVersion = String(data.version);
+
+        if (latestVersion !== CURRENT_VERSION) {
+          notice.style.display = "block";
+        } else {
+          notice.style.display = "none";
+        }
+      } catch (error) {
+        console.warn("バージョン確認に失敗しました:", error);
+      } finally {
+        checkingVersion = false;
+      }
+    }
+
+    updateButton.addEventListener("click", function () {
+      if (!latestVersion) return;
+
+      updateButton.disabled = true;
+      updateButton.textContent = "更新しています…";
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("v", latestVersion);
+
+      // 同じページURLの再利用を避けて再読み込みする
+      window.location.replace(url.href);
     });
 
     checkForUpdate();
 
-    // タブに戻ったときに再確認
-    document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) checkForUpdate();
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) {
+        checkForUpdate();
+      }
     });
 
-    // 起動中も定期的に更新を確認
+    // 起動中も1分ごとに更新を確認
     window.setInterval(checkForUpdate, 60000);
-})();
-</script>
-<!-- UPDATE_WIDGET_END -->
+  </script>
 
+  <script>
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingBar = document.querySelector("#unity-loading-bar");
+    var progressBarFull = document.querySelector("#unity-progress-bar-full");
+    var warningBanner = document.querySelector("#unity-warning");
+
+    function unityShowBanner(msg, type) {
+      function updateBannerVisibility() {
+        warningBanner.style.display =
+          warningBanner.children.length ? "block" : "none";
+      }
+
+      var div = document.createElement("div");
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+
+      if (type == "error") {
+        div.style = "background: red; padding: 10px;";
+      } else {
+        if (type == "warning") {
+          div.style = "background: yellow; padding: 10px;";
+        }
+
+        setTimeout(function () {
+          if (div.parentNode === warningBanner) {
+            warningBanner.removeChild(div);
+          }
+          updateBannerVisibility();
+        }, 5000);
+      }
+
+      updateBannerVisibility();
+    }
+
+    // BuildScript.csがビルド後に書き換える
+    var buildUrl = "Build_20261020130651862";
+
+    var loaderUrl = buildUrl + "/jankenMaster.loader.js";
+
+    var config = {
+      arguments: [],
+      dataUrl: buildUrl + "/jankenMaster.data",
+      frameworkUrl: buildUrl + "/jankenMaster.framework.js",
+      codeUrl: buildUrl + "/jankenMaster.wasm",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "DefaultCompany",
+      productName: "JankenMaster",
+      productVersion: "1.0",
+      showBanner: unityShowBanner
+    };
+
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      var meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content =
+        "width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes";
+
+      document.head.appendChild(meta);
+    }
+
+    loadingBar.style.display = "block";
+
+    var script = document.createElement("script");
+
+    script.src = loaderUrl;
+
+    script.onload = function () {
+      createUnityInstance(
+        canvas,
+        config,
+        function (progress) {
+          progressBarFull.style.width = (100 * progress) + "%";
+        }
+      ).then(function (unityInstance) {
+        loadingBar.style.display = "none";
+      }).catch(function (message) {
+        alert(message);
+      });
+    };
+
+    script.onerror = function () {
+      alert("ゲームの読み込みに失敗しました。ページを再読み込みしてください。");
+    };
+
+    document.body.appendChild(script);
+  </script>
 </body>
 </html>
